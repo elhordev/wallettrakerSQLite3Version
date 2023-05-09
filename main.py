@@ -19,7 +19,22 @@ def wellcome_menu(borrado):
     db_manager.choose_user()
 
 
-    """type_wallet = input("Como deseas trabajar?\n"
+   
+
+def main():
+    db_manager.create_db()
+    borrado = borrado_dep_so()
+    wellcome_menu(borrado)
+    
+
+
+
+
+
+if __name__ == '__main__':
+    main()
+
+"""type_wallet = input("Como deseas trabajar?\n"
                                 "[A]Importar Wallet.\n"
                                 "[B]Wallet Temporal.\n"
                                 "[Q]Para Salir\n\n")
@@ -37,15 +52,3 @@ def wellcome_menu(borrado):
     exit()   
 
 """
-
-def main():
-    borrado = borrado_dep_so()
-    wellcome_menu(borrado)
-    
-
-
-
-
-
-if __name__ == '__main__':
-    main()
