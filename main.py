@@ -1,7 +1,7 @@
-import os 
+from wallettraker_srcs import HEADER ,os ,time ,URL
 import db_manager
-import time
-HEADER = "Wellcome to wallettraker v1.0 SQLite3 Version by elhorDev"
+import scraper
+
 
 def borrado_dep_so():
     borrado = None
@@ -22,8 +22,11 @@ def wellcome_menu(borrado):
    
 
 def main():
-    db_manager.create_db()
     borrado = borrado_dep_so()
+    result = scraper.urlcontent(URL)
+    realtime = scraper.scrapurl(result)
+    scraper.show_tiempo_real(realtime,borrado)
+    db_manager.create_db()
     wellcome_menu(borrado)
     
 
