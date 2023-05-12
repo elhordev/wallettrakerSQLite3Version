@@ -1,6 +1,4 @@
-import pandas as pd
-import sqlite3
-import os
+from wallettraker_srcs import os, sqlite3, time, pd, wallet_at_use, datetime
 
 
 def create_db():
@@ -53,6 +51,7 @@ def choose_user():
         taxes REAL,
         date TEXT(255),
         qty INTEGER,
+        "index" INTEGER,
         accountcharge REAL
         )
         """)
@@ -71,6 +70,7 @@ def choose_user():
         )
         """)
             user_conn.close()
+            choose_user()
         except FileExistsError:
             print('Usuario existente, por favor, elija otro nombre de usuario')
             choose_user()
@@ -78,3 +78,60 @@ def choose_user():
 
     if user_id == 'Q' or user_id == 'q':
         exit()
+
+
+    else:
+        wallet_at_use = user_id
+        return wallet_at_use
+    
+def add_to_wallet(realtime,wallet_at_use,borrado):
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()      
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    user_conn.close()
+    print(user_at_use)
+   
+    df_acciones = pd.DataFrame(realtime)
+    print(df_acciones)
+    try:
+        
+        opcion = int(input("Qué valor del Ibex 35 has comprado?\n"))
+                
+               
+
+        Stock = realtime[opcion]["Stock"]
+        Buyprice = float(input(f"A que precio has comprado las acciones de {Stock} ?\n"))
+        Qty = int(input(f"Cuantas acciones de {Stock} has comrpado a {Buyprice}?\n"))
+        date_buy = "12/05/2023"
+        Expense = float(input("Cuanto te han cobrado de gastos de compra?\n"))
+        Index = opcion
+        AccountCharge = (Buyprice * Qty) + Expense
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+        cursor = user_conn.cursor()
+        cursor.execute(f'''INSERT INTO stock_wallet_{user_at_use} (stock,buy_price,taxes,date,qty,"index",accountcharge)
+                          VALUES ('{Stock}',{Buyprice},{Expense},'{date_buy}',{Qty},{Index},{AccountCharge})
+                          ''')
+       
+        user_conn.commit()
+        cursor.close()
+        user_conn.close()
+        os.system(borrado)
+        print(f"Añadida la compra de {Qty} acciones de {Stock} por un cargo en cuenta de {AccountCharge} euros.")
+        
+    except ValueError:
+            os.system(borrado)
+            print("Valor introducido incorrecto, solo valor numerico.")
+            time.sleep(5)
+            os.system(borrado)
+            add_to_wallet(realtime,wallet_at_use,borrado)
+    except IndexError:
+            os.system(borrado)
+            print(f"El Indice introducido se ha salido del rango, por favor , elije del 0 al {len(realtime)-1}.")
+            time.sleep(5)
+            os.system(borrado)
+            add_to_wallet(realtime,wallet_at_use,borrado)
+    time.sleep(5)
+    os.system(borrado)
+    

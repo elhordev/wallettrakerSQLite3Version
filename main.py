@@ -1,4 +1,4 @@
-from wallettraker_srcs import HEADER ,os ,time ,URL
+from wallettraker_srcs import HEADER ,os ,time ,URL ,wallet_at_use
 import db_manager
 import scraper
 
@@ -13,11 +13,12 @@ def borrado_dep_so():
 
 
 
-def wellcome_menu(borrado):
+def user_menu(borrado):
     print ("\n" + HEADER + "\n" + "-" *len(HEADER) + "\n")
     time.sleep(5)
-    db_manager.choose_user()
 
+    wallet_at_use = db_manager.choose_user()
+    return wallet_at_use
 
    
 
@@ -25,9 +26,12 @@ def main():
     borrado = borrado_dep_so()
     result = scraper.urlcontent(URL)
     realtime = scraper.scrapurl(result)
-    scraper.show_tiempo_real(realtime,borrado)
     db_manager.create_db()
-    wellcome_menu(borrado)
+    wallet_at_use = user_menu(borrado)
+    db_manager.add_to_wallet(realtime,wallet_at_use,borrado)
+    #scraper.show_tiempo_real(realtime,borrado)
+    
+    user_menu(borrado)
     
 
 
