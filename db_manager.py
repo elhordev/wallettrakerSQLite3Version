@@ -1,5 +1,4 @@
-from wallettraker_srcs import os, sqlite3, time, pd, wallet_at_use, datetime
-
+from wallettraker_srcs import os, sqlite3, time, pd, wallet_at_use, datetime, main
 
 def create_db():
     if os.path.exists('./db/user.db'):
@@ -135,3 +134,41 @@ def add_to_wallet(realtime,wallet_at_use,borrado):
     time.sleep(5)
     os.system(borrado)
     
+def db_manager_menu():
+    option = input('¿Qué desea hacer con su Wallet?\n'
+                   '[A]Añadir compra a la cartera.\n'
+                   '[B]Añadir venta de la cartera.\n'
+                   '[C]Eliminar compra de la cartera.\n'
+                   '[D]Eliminar venta de la cartera.\n'
+                   '[E]Modificar compra de la cartera.\n'
+                   '[F]Modificar venta de la cartera.\n'
+                   '[G]Buscar compra en la cartera.\n'
+                   '[H]Buscar venta en la cartera.\n'
+                   '[I]Ver cartera actual\n'
+                   '[J]Ver ventas efectuadas.\n'
+                   '[K]Volver atrás.')
+    
+    """if option == 'A' or option == 'a':
+        add_to_wallet()
+    
+    if option == 'B' or option == 'b':
+        #funcion para efectuar venta
+    
+    if option == 'C' or option == 'c':
+        #funcion para eliminar compra por error
+    if option == 'D' or option == 'd':
+        #funcion para eliminar venta por error
+    if option == 'E' or option == 'e':
+        #funcion para modificar compra de la cartera por error
+    if option == 'F' or option == 'f':
+        #funcion para modificar venta de la cartera por error
+    if option == 'G' or option == 'g':
+        #funcion para buscar compra en la cartera
+    if option == 'H' or option == 'h':
+        #funcion para buscar venta en la cartera
+    if option == 'I' or option == 'i':
+        #funcion para ver cartera
+    if option == 'J' or option =='j':
+        #funcion para ver ventas
+    if option == 'K' or option == 'k':
+        main.main_menu()"""

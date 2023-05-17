@@ -61,3 +61,5 @@ def show_tiempo_real(realtime,borrado):
         df = pd.DataFrame(realtime)
         print(df)
         time.sleep(5)
+
+
