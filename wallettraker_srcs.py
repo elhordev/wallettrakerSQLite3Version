@@ -7,6 +7,6 @@ import requests
 from datetime import datetime
 import sqlite3
 from bs4 import BeautifulSoup
-import main
+import shutil
 URL = "https://www.productoscotizados.com/mercado/ibex-35"
 wallet_at_use = None

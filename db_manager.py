@@ -1,5 +1,5 @@
-from wallettraker_srcs import os, sqlite3, time, pd, wallet_at_use, datetime, main
-
+from wallettraker_srcs import os, sqlite3, time, pd, wallet_at_use, datetime, shutil
+from main import main
 def create_db():
     if os.path.exists('./db/user.db'):
         pass
@@ -28,7 +28,8 @@ def choose_user():
         print('No existen usuarios.')
 
     user_id = input('Cual es tu usuario?\n'
-                    '[A]Crear Nuevo Usuario\n'
+                    '[A]Crear nuevo usuario\n'
+                    '[B]Eliminar usuario existente\n'
                     '[Q]Salir\n')
     if user_id == 'A' or user_id == 'a':
        
@@ -44,7 +45,7 @@ def choose_user():
             user_conn = sqlite3.connect(f'./db/user/{new_user_name}/stock_wallet_{new_user_name}.db')
             user_conn.execute(f"""
         CREATE TABLE stock_wallet_{new_user_name} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_buy INTEGER PRIMARY KEY AUTOINCREMENT,
         stock TEXT(255),
         buy_price REAL,
         taxes REAL,
@@ -59,22 +60,65 @@ def choose_user():
             user_conn = sqlite3.connect(f'./db/user/{new_user_name}/stock_sales_{new_user_name}.db')
             user_conn.execute(f"""
         CREATE TABLE stock_sales_{new_user_name} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_sale INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_buy INTEGER,
         stock TEXT(255),
         sell_price REAL,
         taxes REAL,
         date TEXT(255),
         qty INTEGER,
-        accountincome REAL
+        accountincome REAL,
+        foreign key(id_buy) references stock_wallet_{new_user_name}(id_buy)
         )
         """)
             user_conn.close()
+
+           
+            user_conn = sqlite3.connect(f'./db/user/{new_user_name}/balances_{new_user_name}.db')
+            user_conn.execute(f"""
+        CREATE TABLE balances_{new_user_name} (
+        id_balance INTEGER PRIMARY KEY AUTOINCREMENT,
+        stock TEXT(255),
+        buy_price REAL,
+        sell_price REAL,
+        total_taxes REAL,
+        date_buy TEXT(255),
+        date_sell TEXT(255),
+        qty INTEGER,
+        balance REAL,
+        foreign key(buy_price) references stock_wallet_{new_user_name}(buy_price),
+        foreign key(sell_price) references stock_sales_{new_user_name}(sell_price),
+        foreign key(date_buy) references stock_wallet{new_user_name}(date),
+        foreign key(date_sell) references stock_sales_{new_user_name}(date),
+        foreign key(qty) references stock_sales_{new_user_name}(qty)
+        )
+        """)
+            user_conn.close()        
+               
+            
+            
+            
             choose_user()
         except FileExistsError:
             print('Usuario existente, por favor, elija otro nombre de usuario')
             choose_user()
 
-
+    if user_id == 'B' or user_id == 'b':
+        print(user_df)
+        opcion = int(input('¿Qué usuario quieres eliminar?'))
+        user_conn = sqlite3.connect('./db/user.db')
+        cursor = user_conn.cursor()      
+        cursor.execute(f'SELECT * FROM user WHERE id={opcion}')
+        user_to_delete = cursor.fetchone()
+        user_to_delete = user_to_delete[1]
+        cursor.execute(f'DELETE from user WHERE id={opcion}')
+        cursor.close()
+        user_conn.commit()
+        user_conn.close()
+        shutil.rmtree(f'./db/user/{user_to_delete}')
+        print(f'Usuario {user_to_delete} eliminado, a chuparla!')
+        time.sleep(2)
+        choose_user()
     if user_id == 'Q' or user_id == 'q':
         exit()
 
