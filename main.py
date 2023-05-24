@@ -1,7 +1,7 @@
-from wallettraker_srcs import HEADER ,os ,time ,URL ,wallet_at_use
+from wallettraker_srcs import HEADER ,os ,time ,URL 
 import db_manager
 import scraper
-
+wallet_at_use = None
 
 def borrado_dep_so():
     borrado = None
@@ -15,12 +15,12 @@ def borrado_dep_so():
 
 def user_menu(borrado):
     print ("\n" + HEADER + "\n" + "-" *len(HEADER) + "\n")
-    time.sleep(5)
+    time.sleep(2)
 
     wallet_at_use = db_manager.choose_user()
     return wallet_at_use
 
-def main_menu():
+def main_menu(realtime,wallet_at_use,borrado_dep_so):
     option = input('¿Qué deseas hacer?:\n'
                    '[A]Gestionar tu cartera.\n'
                    '[B]Ver tiempo real.\n'
@@ -28,7 +28,7 @@ def main_menu():
                    '[D]Cambiar de usuario.\n'
                    '[F]Salir.\n') 
     if option == 'A' or option == 'a':
-        db_manager.db_manager_menu()
+        db_manager.db_manager_menu(realtime,wallet_at_use,borrado_dep_so)
     
     if option == 'B' or option == 'b':
         scraper.show_tiempo_real()
@@ -48,7 +48,7 @@ def main():
     realtime = scraper.scrapurl(result)
     db_manager.create_db()
     wallet_at_use = user_menu(borrado)
-    main_menu()
+    main_menu(realtime,wallet_at_use,borrado)
     #db_manager.add_to_wallet(realtime,wallet_at_use,borrado)
     #scraper.show_tiempo_real(realtime,borrado)
     

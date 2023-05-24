@@ -1,5 +1,9 @@
-from wallettraker_srcs import os, sqlite3, time, pd, wallet_at_use, datetime, shutil
-from main import main
+from wallettraker_srcs import os, sqlite3, time, pd, datetime, shutil
+from main import main,borrado_dep_so as borrado, wallet_at_use
+
+
+
+
 def create_db():
     if os.path.exists('./db/user.db'):
         pass
@@ -177,8 +181,118 @@ def add_to_wallet(realtime,wallet_at_use,borrado):
             add_to_wallet(realtime,wallet_at_use,borrado)
     time.sleep(5)
     os.system(borrado)
+
+def add_a_sell(realtime,wallet_at_use,borrado):
     
-def db_manager_menu():
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    cursor.close()
+    user_conn.close()
+    
+    #Hemos seleccionado el usuario, viendo lo que se repite, hare una funcion a parte para esto.
+    user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+    buy_df = pd.read_sql(f'SELECT * FROM stock_wallet_{user_at_use}',user_conn,)
+    buy_df = buy_df.reset_index(drop=True)
+    buy_df = buy_df.set_index('id_buy')
+    print(buy_df)
+
+    #Imprimimos por df la tabla de las compras usando Pandas como consultor.
+    cursor = user_conn.cursor()
+    id_buy = int(input('A que compra pertenece esta venta?\n'))
+    cursor.execute(f'SELECT stock FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')
+    stock = cursor.fetchone()
+    #Si coincide el id introducido con un valor en la tabla de compras...
+    if stock:
+        stock = stock[0]
+        cursor.execute(f'SELECT qty FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')
+        qty = cursor.fetchone()
+        qty = qty[0]
+        cursor.close()
+        user_conn.close()
+        sell_price = float(input('A que precio has vendido?\n'))
+        taxes = float(input('Cuanto te han cobrado de tasas?\n'))
+        accountincome = (sell_price * qty) - taxes
+        date = '16/08/1992'
+        
+        while True:
+            
+            print(f'''\n
+            Precio de venta {sell_price} \n
+            Cantidad {qty}\n
+            Precio de venta {sell_price}\n
+            Tasas {taxes}\n
+            Ingreso en cuenta {accountincome},\n
+            Fecha {date},\n''')
+            
+            consulta = input('Los datos son correctos?[S\\N]\n')
+            if consulta == 's' or consulta == 'S':
+
+                user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_sales_{user_at_use}.db')
+                cursor = user_conn.cursor()
+                cursor.execute(f'''INSERT INTO stock_sales_{user_at_use}(id_buy, stock, sell_price, taxes, date, qty,accountincome)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?)''',(id_buy,stock,sell_price,taxes,date,qty,accountincome,))
+                user_conn.commit()
+                cursor.close()
+                user_conn.close()
+                #Al cerrar la compra, agregamos el resultado a la tabla de balances.
+                user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+                cursor = user_conn.cursor()
+                #Importamos precio de compra
+                cursor.execute(f'SELECT buy_price FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')
+                buy_price = cursor.fetchone()
+                buy_price = buy_price[0]
+                #Importamos taxes de la compra para poder sumarlo al total_taxes de la tabla balances.
+                cursor.execute(f'SELECT taxes FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')
+                buy_taxes = cursor.fetchone()
+                buy_taxes = buy_taxes[0]
+                total_taxes = buy_taxes + taxes
+                #Importamos la fecha de compra .
+                cursor.execute(f'SELECT date FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')
+                date_buy = cursor.fetchone()
+                date_buy = date_buy[0]
+                #Calculamos el balance total
+                cursor.execute(f'SELECT accountcharge FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')
+                buy_charge = cursor.fetchone()
+                buy_charge = buy_charge[0]
+                balance = accountincome - buy_charge
+                cursor.close()
+                user_conn.close()
+                #Conectamos a la db de Balances.
+                user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+                cursor = user_conn.cursor()
+                cursor.execute(f'''INSERT INTO balances_{user_at_use}(stock, buy_price, sell_price, total_taxes, date_buy, date_sell, qty, balance)
+                                    VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',(stock,buy_price,sell_price,total_taxes,date_buy,date,qty,balance))
+                user_conn.commit()
+                cursor.close()
+                user_conn.close()
+                            
+                break
+                
+            if consulta == 'n' or consulta == 'N':
+                print('Volvemos atras...')
+                time.sleep(3)
+                os.system(borrado)
+                add_a_sell(realtime,wallet_at_use,borrado)
+                break
+
+            else:
+                print('Selecciona la opcion correcta')
+
+    
+
+    
+    
+    else:
+        print('Compra no encontrada, por favor, seleccione otra compra.')
+        db_manager_menu(realtime,wallet_at_use,borrado)
+
+
+
+
+def db_manager_menu(realtime,wallet_at_use,borrado):
     option = input('¿Qué desea hacer con su Wallet?\n'
                    '[A]Añadir compra a la cartera.\n'
                    '[B]Añadir venta de la cartera.\n'
@@ -190,15 +304,15 @@ def db_manager_menu():
                    '[H]Buscar venta en la cartera.\n'
                    '[I]Ver cartera actual\n'
                    '[J]Ver ventas efectuadas.\n'
-                   '[K]Volver atrás.')
+                   '[K]Volver atrás.\n')
     
-    """if option == 'A' or option == 'a':
-        add_to_wallet()
+    if option == 'A' or option == 'a':
+        add_to_wallet(realtime,wallet_at_use,borrado)
     
     if option == 'B' or option == 'b':
-        #funcion para efectuar venta
-    
-    if option == 'C' or option == 'c':
+        add_a_sell(realtime,wallet_at_use,borrado)
+
+"""    if option == 'C' or option == 'c':
         #funcion para eliminar compra por error
     if option == 'D' or option == 'd':
         #funcion para eliminar venta por error
