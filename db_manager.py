@@ -289,9 +289,101 @@ def add_a_sell(realtime,wallet_at_use,borrado):
         print('Compra no encontrada, por favor, seleccione otra compra.')
         db_manager_menu(realtime,wallet_at_use,borrado)
 
+def delete_a_buy(realtime,wallet_at_use,borrado):
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    cursor.close()
+    user_conn.close()
+    
+    #Hemos seleccionado el usuario, viendo lo que se repite, hare una funcion a parte para esto.
+    user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+    buy_df = pd.read_sql(f'SELECT * FROM stock_wallet_{user_at_use}',user_conn,)
+    buy_df = buy_df.reset_index(drop=True)
+    buy_df = buy_df.set_index('id_buy')
+    print(buy_df)
 
+    #Imprimimos por df la tabla de las compras usando Pandas como consultor.Tambien deberia de hacer una funcion para esto.
+    #Still learning!
+    cursor = user_conn.cursor()
+    id_buy = int(input('Que compra deseas eliminar?\n'
+                       '[A]Para ir atras.'))
+    
+    if id_buy == 'a' or id_buy == 'A':
+        db_manager_menu(realtime,wallet_at_use,borrado)
 
+    else:
+                 
+        cursor.execute(f'DELETE FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')
+        user_conn.commit()
+        rows_affected = cursor.rowcount
+        if rows_affected == 0:
+                print('El id_buy proporcionado no existe en la base de datos.')
+                time.sleep(3)
+                delete_a_buy(realtime,wallet_at_use,borrado)
+        else:
+                os.system(borrado)
+                print('Compra eliminada satisfactoriamente.')
+                time.sleep(3)
+                cursor.close()
+                user_conn.close()
+                db_manager_menu(realtime,wallet_at_use,borrado)
+        
+        cursor.close()
+        user_conn.close()
+        os.system(borrado)
+      
+def delete_a_sell(realtime,wallet_at_use,borrado):
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    cursor.close()
+    user_conn.close()
+    
+    #Hemos seleccionado el usuario, viendo lo que se repite, hare una funcion a parte para esto.
+    user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_sales_{user_at_use}.db')
+    sell_df = pd.read_sql(f'SELECT * FROM stock_sales_{user_at_use}',user_conn,)
+    sell_df = sell_df.reset_index(drop=True)
+    sell_df = sell_df.set_index('id_sale')
+    print(sell_df)
 
+    #Imprimimos por df la tabla de las compras usando Pandas como consultor.Tambien deberia de hacer una funcion para esto.
+    #Still learning!
+    cursor = user_conn.cursor()
+    id_sell = int(input('Que venta deseas eliminar?\n'
+                       '[A]Para ir atras.'))
+    
+    if id_sell == 'a' or id_sell == 'A':
+        db_manager_menu(realtime,wallet_at_use,borrado)           
+    else:
+                 
+        cursor.execute(f'DELETE FROM stock_sales_{user_at_use} WHERE id_sale = {id_sell}')
+        user_conn.commit()
+        rows_affected = cursor.rowcount
+        if rows_affected == 0:
+                print('El id_sell proporcionado no existe en la base de datos.')
+                time.sleep(3)
+                delete_a_sell(realtime,wallet_at_use,borrado)
+        else:
+                os.system(borrado)
+                print('Compra eliminada satisfactoriamente.')
+                cursor.close()
+                user_conn.close()
+                """user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+                cursor = user_conn.cursor()
+                cursor.execute(f'DELETE FROM balances_{user_at_use} WHERE id_sale = {id_sell}')
+                time.sleep(3)
+                cursor.close()
+                user_conn.close()"""
+                db_manager_menu(realtime,wallet_at_use,borrado)
+        
+        cursor.close()
+        user_conn.close()
+        os.system(borrado)
 def db_manager_menu(realtime,wallet_at_use,borrado):
     option = input('¿Qué desea hacer con su Wallet?\n'
                    '[A]Añadir compra a la cartera.\n'
@@ -312,11 +404,11 @@ def db_manager_menu(realtime,wallet_at_use,borrado):
     if option == 'B' or option == 'b':
         add_a_sell(realtime,wallet_at_use,borrado)
 
-"""    if option == 'C' or option == 'c':
-        #funcion para eliminar compra por error
+    if option == 'C' or option == 'c':
+        delete_a_buy(realtime,wallet_at_use,borrado)
     if option == 'D' or option == 'd':
-        #funcion para eliminar venta por error
-    if option == 'E' or option == 'e':
+        delete_a_sell(realtime,wallet_at_use,borrado)
+    """if option == 'E' or option == 'e':
         #funcion para modificar compra de la cartera por error
     if option == 'F' or option == 'f':
         #funcion para modificar venta de la cartera por error

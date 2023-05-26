@@ -62,21 +62,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-"""type_wallet = input("Como deseas trabajar?\n"
-                                "[A]Importar Wallet.\n"
-                                "[B]Wallet Temporal.\n"
-                                "[Q]Para Salir\n\n")
-    os.system(borrado)
-    while type_wallet != "Q" and type_wallet != "q":
-            
-        if type_wallet == "A" or type_wallet == "a":
-                wallet_total = upload_wallet()
-                return wallet_total
-        if type_wallet == "b" or type_wallet == "B":
-                wallet_total = []
-                return wallet_total
-            
-    print("Hasta la proxima!")
-    exit()   
-
-"""
