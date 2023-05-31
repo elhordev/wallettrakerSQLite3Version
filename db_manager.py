@@ -82,6 +82,7 @@ def choose_user():
             user_conn.execute(f"""
         CREATE TABLE balances_{new_user_name} (
         id_balance INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_buy INTEGER,
         stock TEXT(255),
         buy_price REAL,
         sell_price REAL,
@@ -90,6 +91,7 @@ def choose_user():
         date_sell TEXT(255),
         qty INTEGER,
         balance REAL,
+        foreign key(id_buy) references stock_wallet_{new_user_name}(id_buy),
         foreign key(buy_price) references stock_wallet_{new_user_name}(buy_price),
         foreign key(sell_price) references stock_sales_{new_user_name}(sell_price),
         foreign key(date_buy) references stock_wallet{new_user_name}(date),
@@ -263,8 +265,8 @@ def add_a_sell(realtime,wallet_at_use,borrado):
                 #Conectamos a la db de Balances.
                 user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
                 cursor = user_conn.cursor()
-                cursor.execute(f'''INSERT INTO balances_{user_at_use}(stock, buy_price, sell_price, total_taxes, date_buy, date_sell, qty, balance)
-                                    VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',(stock,buy_price,sell_price,total_taxes,date_buy,date,qty,balance))
+                cursor.execute(f'''INSERT INTO balances_{user_at_use}(id_buy, stock, buy_price, sell_price, total_taxes, date_buy, date_sell, qty, balance)
+                                    VALUES(? ,?, ?, ?, ?, ?, ?, ?, ?)''',(id_buy,stock,buy_price,sell_price,total_taxes,date_buy,date,qty,balance))
                 user_conn.commit()
                 cursor.close()
                 user_conn.close()
@@ -360,7 +362,9 @@ def delete_a_sell(realtime,wallet_at_use,borrado):
     if id_sell == 'a' or id_sell == 'A':
         db_manager_menu(realtime,wallet_at_use,borrado)           
     else:
-                 
+        cursor.execute(f'SELECT id_buy FROM stock_sales_{user_at_use} WHERE id_sale = {id_sell}')
+        delete_from_balances = cursor.fetchone()
+        delete_from_balances = delete_from_balances[0]
         cursor.execute(f'DELETE FROM stock_sales_{user_at_use} WHERE id_sale = {id_sell}')
         user_conn.commit()
         rows_affected = cursor.rowcount
@@ -373,12 +377,15 @@ def delete_a_sell(realtime,wallet_at_use,borrado):
                 print('Compra eliminada satisfactoriamente.')
                 cursor.close()
                 user_conn.close()
-                """user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+
+                user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
                 cursor = user_conn.cursor()
-                cursor.execute(f'DELETE FROM balances_{user_at_use} WHERE id_sale = {id_sell}')
-                time.sleep(3)
+                cursor.execute(f'DELETE FROM balances_{user_at_use} WHERE id_buy = {delete_from_balances}')
+                user_conn.commit()
                 cursor.close()
-                user_conn.close()"""
+                user_conn.close()
+
+                time.sleep(3)
                 db_manager_menu(realtime,wallet_at_use,borrado)
         
         cursor.close()
