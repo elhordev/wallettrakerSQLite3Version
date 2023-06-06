@@ -417,12 +417,42 @@ def db_manager_menu(realtime,wallet_at_use,borrado):
         delete_a_sell(realtime,wallet_at_use,borrado)
     """if option == 'E' or option == 'e':
         #funcion para modificar compra de la cartera por error
+        1.Conexion a db de compras
+        2.hacemos el update
+        3.hacemos commit
+        4.conexion a db de balances
+        5.como ya tenemos en las variables 
+        6.conectamos a db de balances
+        7.hacemos update
+        8.hacemos commit
+        9.cerramos conexion
     if option == 'F' or option == 'f':
         #funcion para modificar venta de la cartera por error
+        1.Conexion a db de ventas
+        2.hacemos el update
+        3.hacemos commit
+        4.conexion a db de balances
+        5.como ya tenemos en las variables 
+        6.conectamos a db de balances
+        7.hacemos update
+        8.hacemos commit
+        9.cerramos conexion
     if option == 'G' or option == 'g':
         #funcion para buscar compra en la cartera
+        1.conectamos a db de compras
+        2.printeamos opciones
+        3.seleccionamos la opcion
+        4.consulta de busqueda segun la opcion con pandas df
+        5.printeamos df
+        6.cerramos conexion
     if option == 'H' or option == 'h':
         #funcion para buscar venta en la cartera
+        1.conectamos a db de ventas
+        2.printeamos opciones
+        3.seleccionamos la opcion
+        4.consulta de busqueda segun la opcion con pandas df
+        5.printeamos df
+        6.cerramos conexion
     if option == 'I' or option == 'i':
         #funcion para ver cartera
     if option == 'J' or option =='j':
