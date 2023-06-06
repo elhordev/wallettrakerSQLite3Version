@@ -391,6 +391,80 @@ def delete_a_sell(realtime,wallet_at_use,borrado):
         cursor.close()
         user_conn.close()
         os.system(borrado)
+
+def modify_a_buy(realtime,wallet_at_use,borrado):
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    cursor.close()
+    user_conn.close()
+    
+    #Hemos seleccionado el usuario, viendo lo que se repite, hare una funcion a parte para esto.
+    user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+    sell_df = pd.read_sql(f'SELECT * FROM stock_wallet_{user_at_use}',user_conn,)
+    sell_df = sell_df.reset_index(drop=True)
+    sell_df = sell_df.set_index('id_buy')
+    print(sell_df)
+
+    #Imprimimos por df la tabla de las compras usando Pandas como consultor.Tambien deberia de hacer una funcion para esto.
+    #Still learning!
+    cursor = user_conn.cursor()
+    id_sell = int(input('Que compra deseas modificar?\n'
+                       '[A]Para ir atras.'))
+    cursor.execute(f'SELECT id_buy FROM stock_wallet_{user_at_use}')
+    num_registros = cursor.fetchall()
+
+    if id_sell not in num_registros:
+        print('Compra  no encontrada, introduce una compra válida.') 
+        time.sleep(3)
+        modify_a_buy(realtime,wallet_at_use,borrado)
+    if id_sell == 'a' or id_sell == 'A':
+        db_manager_menu(realtime,wallet_at_use,borrado)           
+    if id_sell != int:
+        print('Solo valores numéricos.')
+        time.sleep(3)
+        modify_a_buy(wallet_at_use,borrado)
+    else:
+        opcion = input('Que deseas modificar?\n'
+              '[A]Buy price\n'
+              '[B]Taxes\n'
+              '[C]Qty\n'
+              )
+        if opcion == 'A' or opcion =='a':
+            new_price = input('Cual es el nuevo precio?')
+            cursor.execute(f'UPDATE stock_wallet_{user_at_use} SET buy_price = {new_price} WHERE id_buy = {id_sell}')
+            user_conn.commit()
+            cursor.execute(f'SELECT buy_price, taxes, qty FROM stock_wallet_{user_at_use} WHERE id_buy = {id_sell}')
+            data_from_table = cursor.fetchone()
+            buy_price = data_from_table[0]
+            taxes = data_from_table[1]
+            qty = data_from_table[2]
+            accountcharge = (buy_price * qty) + taxes
+            cursor.execute(f'UPDATE stock_wallet_{user_at_use} SET accountcharge = {accountcharge} WHERE id_buy = {id_sell}')
+            user_conn.commit()
+            cursor.close()
+            user_conn.close()
+            #Conectamos ahora con la db de balances para comprobar si hay alguna venta referida a esa compra.
+
+            user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+            cursor = user_conn.cursor()
+            num_registros = cursor.execute(f'SELECT id_buy FROM balances_{user_at_use}')
+
+            if id_sell in num_registros:
+                 #Aqui tenemos que cerrar la conexion con la db de balances
+                 #Luego conectamos con la db de compra y sacamos el cargo en cuenta
+                 #Cerramos conexion y conectamos con la db dee venta y sacamos el ingreso
+                 #Cerramos la conexion , conectamos con la db de balances de nuevo y le updateamos el balance.
+                 #Cerramos conexion y hacemos commit.
+            else:
+                os.system(borrado
+                           )
+                print('Compra con sus respectivos adjuntos modificados y refrescados.')
+                time.sleep(3)
+                os.system(borrado)
+                db_manager_menu(realtime,wallet_at_use,borrado)
 def db_manager_menu(realtime,wallet_at_use,borrado):
     option = input('¿Qué desea hacer con su Wallet?\n'
                    '[A]Añadir compra a la cartera.\n'
@@ -413,20 +487,13 @@ def db_manager_menu(realtime,wallet_at_use,borrado):
 
     if option == 'C' or option == 'c':
         delete_a_buy(realtime,wallet_at_use,borrado)
+
     if option == 'D' or option == 'd':
         delete_a_sell(realtime,wallet_at_use,borrado)
-    """if option == 'E' or option == 'e':
-        #funcion para modificar compra de la cartera por error
-        1.Conexion a db de compras
-        2.hacemos el update
-        3.hacemos commit
-        4.conexion a db de balances
-        5.como ya tenemos en las variables 
-        6.conectamos a db de balances
-        7.hacemos update
-        8.hacemos commit
-        9.cerramos conexion
-    if option == 'F' or option == 'f':
+
+    if option == 'E' or option == 'e':
+        modify_a_buy(realtime,wallet_at_use,borrado)
+    """if option == 'F' or option == 'f':
         #funcion para modificar venta de la cartera por error
         1.Conexion a db de ventas
         2.hacemos el update
