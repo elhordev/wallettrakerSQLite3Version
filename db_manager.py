@@ -222,11 +222,10 @@ def add_a_sell(realtime,wallet_at_use,borrado):
         while True:
             
             print(f'''\n
-            Precio de venta {sell_price} \n
-            Cantidad {qty}\n
             Precio de venta {sell_price}\n
+            Cantidad {qty}\n
             Tasas {taxes}\n
-            Ingreso en cuenta {accountincome},\n
+            Ingreso en cuenta {accountincome}\n
             Fecha {date},\n''')
             
             consulta = input('Los datos son correctos?[S\\N]\n')
@@ -490,6 +489,7 @@ def modify_a_buy(realtime,wallet_at_use,borrado):
                 time.sleep(3)
                 os.system(borrado)
                 db_manager_menu(realtime,wallet_at_use,borrado)
+      
         if opcion == 'B' or opcion == 'b':
             
             new_taxes = input('Cuales son las nuevas comisiones?')
@@ -605,7 +605,147 @@ def modify_a_buy(realtime,wallet_at_use,borrado):
                 os.system(borrado)
                 db_manager_menu(realtime,wallet_at_use,borrado)     
                   
-                              
+
+
+def modify_a_sell(realtime,wallet_at_use,borrado):
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    cursor.close()
+    user_conn.close()
+        #Hemos seleccionado el usuario, viendo lo que se repite, hare una funcion a parte para esto.
+    user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_sales_{user_at_use}.db')
+    sell_df = pd.read_sql(f'SELECT * FROM stock_sales_{user_at_use}',user_conn,)
+    sell_df = sell_df.reset_index(drop=True)
+    sell_df = sell_df.set_index('id_buy')
+    print(sell_df)
+
+    #Imprimimos por df la tabla de las compras usando Pandas como consultor.Tambien deberia de hacer una funcion para esto.
+    #Still learning!
+    cursor = user_conn.cursor()
+    id_sell = int(input('Que venta deseas modificar?\n'
+                       '[A]Para ir atras.'))
+    cursor.execute(f'SELECT id_buy FROM stock_sales_{user_at_use}')
+    num_registros = cursor.fetchall()
+
+    if id_sell not in num_registros[0]:
+        print('Venta no encontrada, introduce una venta válida.') 
+        time.sleep(3)
+        modify_a_sell(realtime,wallet_at_use,borrado)
+    if id_sell == 'a' or id_sell == 'A':
+        db_manager_menu(realtime,wallet_at_use,borrado)           
+    if not isinstance(id_sell, int):
+        print('Solo se permiten valores numéricos.')
+        time.sleep(3)
+        modify_a_sell(wallet_at_use, borrado)
+
+    else:
+        opcion = input('Que deseas modificar?\n'
+                       '[A]Sell price\n'
+                       '[B]Taxes\n'
+                       '[C]Qty\n')
+        if opcion == 'A' or opcion == 'a':
+            new_price = input('Cual es el nuevo precio?')
+            cursor.execute(f'UPDATE stock_sales_{user_at_use} SET sell_price = {new_price} WHERE id_sale = {id_sell}')
+            user_conn.commit()
+            cursor.execute(f'SELECT sell_price, taxes, qty, id_buy FROM stock_sales_{user_at_use} WHERE id_sale = {id_sell}')
+            data_from_table = cursor.fetchone()
+            sell_price = data_from_table[0]
+            taxes = data_from_table[1]
+            qty = data_from_table[2]
+            id_buy = data_from_table[3]
+            accountincome = (sell_price * qty) - taxes             
+            cursor.execute(f'UPDATE stock_sales_{user_at_use} SET accountincome = {accountincome} WHERE id_sale = {id_sell}')      
+            user_conn.commit()
+            cursor.close()
+            user_conn.close()
+            #En este caso no hay que comprobar en otra db ya que es una venta que se sobreentiende que antes ha tenido que haber
+            #una compra. Asi que simplemente se actualiza el balance final en la tabla balances_{user_at_use}.db
+            
+            user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+            cursor = user_conn.cursor()
+            cursor.execute(f'SELECT accountcharge FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')   
+            buy_charge = cursor.fetchone()[0]
+            cursor.close()
+            user_conn.close()
+            #Sacamos el cargo en cuenta
+            new_balance = accountincome - buy_charge
+            user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+            cursor = user_conn.cursor()
+            cursor.execute(f'UPDATE balances_{user_at_use} SET balance = {new_balance} WHERE id_buy = {id_buy}')
+            cursor.execute(f'UPDATE balances_{user_at_use} SET sell_price = {new_price} WHERE id_buy = {id_buy}')
+            user_conn.commit()
+            cursor.close()
+            user_conn.close()
+        
+        if opcion == 'B' or opcion == 'b':
+            new_taxes = input('Cuales son las nuevas comisiones?')
+            cursor.execute(f'UPDATE stock_sales_{user_at_use} SET taxes = {new_taxes} WHERE id_sale = {id_sell}')
+            user_conn.commit()
+            cursor.execute(f'SELECT sell_price, taxes, qty, id_buy FROM stock_sales_{user_at_use} WHERE id_sale = {id_sell}')
+            data_from_table = cursor.fetchone()
+            sell_price = data_from_table[0]
+            taxes = data_from_table[1]
+            qty = data_from_table[2]
+            id_buy = data_from_table[3]
+            accountincome = (sell_price * qty) - taxes             
+            cursor.execute(f'UPDATE stock_sales_{user_at_use} SET accountincome = {accountincome} WHERE id_sale = {id_sell}')      
+            user_conn.commit()
+            cursor.close()
+            user_conn.close()
+            #En este caso no hay que comprobar en otra db ya que es una venta que se sobreentiende que antes ha tenido que haber
+            #una compra. Asi que simplemente se actualiza el balance final en la tabla balances_{user_at_use}.db
+            
+            user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+            cursor.execute(f'SELECT accountcharge FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')   
+            buy_charge = cursor.fetchone()[0]
+            cursor.close()
+            user_conn.close()
+            #Sacamos el cargo en cuenta
+            new_balance = accountincome - buy_charge
+            user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+            cursor = user_conn.cursor()
+            cursor.execute(f'UPDATE balances_{user_at_use} SET balance = {new_balance} WHERE id_buy = {id_buy}')
+            cursor.execute(f'UPDATE balances_{user_at_use} SET sell_price = {new_price} WHERE id_buy = {id_buy}')
+            user_conn.commit()
+            cursor.close()
+            user_conn.close()
+        
+        if opcion == 'C' or opcion == 'c':
+            new_qty = input('Cual es la nueva cantidad?')
+            cursor.execute(f'UPDATE stock_sales_{user_at_use} SET qty = {new_qty} WHERE id_sale = {id_sell}')
+            user_conn.commit()
+            cursor.execute(f'SELECT sell_price, taxes, qty, id_buy FROM stock_sales_{user_at_use} WHERE id_sale = {id_sell}')
+            data_from_table = cursor.fetchone()
+            sell_price = data_from_table[0]
+            taxes = data_from_table[1]
+            qty = data_from_table[2]
+            id_buy = data_from_table[3]
+            accountincome = (sell_price * qty) - taxes             
+            cursor.execute(f'UPDATE stock_sales_{user_at_use} SET accountincome = {accountincome} WHERE id_sale = {id_sell}')      
+            user_conn.commit()
+            cursor.close()
+            user_conn.close()
+            #En este caso no hay que comprobar en otra db ya que es una venta que se sobreentiende que antes ha tenido que haber
+            #una compra. Asi que simplemente se actualiza el balance final en la tabla balances_{user_at_use}.db
+            
+            user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+            cursor.execute(f'SELECT accountcharge FROM stock_wallet_{user_at_use} WHERE id_buy = {id_buy}')   
+            buy_charge = cursor.fetchone()[0]
+            cursor.close()
+            user_conn.close()
+            #Sacamos el cargo en cuenta
+            new_balance = accountincome - buy_charge
+            user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+            cursor = user_conn.cursor()
+            cursor.execute(f'UPDATE balances_{user_at_use} SET balance = {new_balance} WHERE id_buy = {id_buy}')
+            cursor.execute(f'UPDATE balances_{user_at_use} SET sell_price = {new_price} WHERE id_buy = {id_buy}')
+            user_conn.commit()
+            cursor.close()
+            user_conn.close()        
+  
 def db_manager_menu(realtime,wallet_at_use,borrado):
     option = input('¿Qué desea hacer con su Wallet?\n'
                    '[A]Añadir compra a la cartera.\n'
@@ -634,8 +774,9 @@ def db_manager_menu(realtime,wallet_at_use,borrado):
 
     if option == 'E' or option == 'e':
         modify_a_buy(realtime,wallet_at_use,borrado)
-    """if option == 'F' or option == 'f':
-        #funcion para modificar venta de la cartera por error
+    if option == 'F' or option == 'f':
+        modify_a_sell(realtime,wallet_at_use,borrado)
+        """#funcion para modificar venta de la cartera por error
         1.Conexion a db de ventas
         2.hacemos el update
         3.hacemos commit
