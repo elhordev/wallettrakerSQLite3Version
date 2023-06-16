@@ -153,7 +153,7 @@ def add_to_wallet(realtime,wallet_at_use,borrado):
         Stock = realtime[opcion]["Stock"]
         Buyprice = float(input(f"A que precio has comprado las acciones de {Stock} ?\n"))
         Qty = int(input(f"Cuantas acciones de {Stock} has comrpado a {Buyprice}?\n"))
-        date_buy = "12/05/2023"
+        date_buy = datetime.date.today()
         Expense = float(input("Cuanto te han cobrado de gastos de compra?\n"))
         Index = opcion
         AccountCharge = (Buyprice * Qty) + Expense
@@ -217,7 +217,7 @@ def add_a_sell(realtime,wallet_at_use,borrado):
         sell_price = float(input('A que precio has vendido?\n'))
         taxes = float(input('Cuanto te han cobrado de tasas?\n'))
         accountincome = (sell_price * qty) - taxes
-        date = '16/08/1992'
+        date = datetime.date.today()
         
         while True:
             
@@ -744,8 +744,69 @@ def modify_a_sell(realtime,wallet_at_use,borrado):
             cursor.execute(f'UPDATE balances_{user_at_use} SET sell_price = {new_price} WHERE id_buy = {id_buy}')
             user_conn.commit()
             cursor.close()
-            user_conn.close()        
-  
+            user_conn.close()    
+
+def find_a_buy(realtime,wallet_at_use,borrado):
+    
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    cursor.close()
+    user_conn.close()
+    
+    
+    
+    option = input('¿Qué filtro deseas usar para encontrar tu compra?\n'
+                   '[A]Nombre valor\n'
+                   '[B]Fecha de compra\n'
+                   '[C]Cantidad\n'
+                   '[D]Volver atrás'
+                   )
+    user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')  
+   
+    
+    if option == 'a' or option == 'A':
+        name_of_buy = input('Cual es el nombre del valor?\n')
+        df = pd.read_sql_query(f'SELECT * from stock_wallet_{user_at_use} WHERE stock LIKE "%{name_of_buy}%" ', user_conn)
+        print(df)
+        print(f'\nTe muestro los resultados de la busqueda basados en el criterio = {name_of_buy}\n')
+        input('\nPresiona ENTER para continuar')
+        user_conn.close()
+        os.system(borrado)
+        db_manager_menu(realtime,wallet_at_use,borrado)
+    
+    if option =='b' or option == 'B':
+        date_of_buy = input('Cual es la fecha?*\n'
+                            '*La fecha se almacena en la base de datos de la siguiente forma:\n'
+                            'AAAA-MM-DD, téngalo en cuenta a la hora de tu criterio de búsqueda' )
+
+        df = pd.read_sql_query(f'SELECT * from stock_wallet_{user_at_use} WHERE date LIKE "%{date_of_buy}%" ', user_conn)
+        print(df)
+        print(f'\nTe muestro los resultados de la busqueda basados en el criterio = {date_of_buy}\n')
+        input('\nPresiona ENTER para continuar')
+        user_conn.close()
+        os.system(borrado)
+        db_manager_menu(realtime,wallet_at_use,borrado)
+    
+    if option == 'c' or option == 'C':
+        qty_of_buy = input('Que cantidad de acciones desdeas filtrar?')
+        df = pd.read_sql_query(f'SELECT * from stock_wallet_{user_at_use} WHERE qty LIKE "{qty_of_buy}" ', user_conn)
+        print(df)
+        print(f'\nTe muestro los resultados de la busqueda basados en el criterio = {qty_of_buy}\n')
+        input('\nPresiona ENTER para continuar')
+        user_conn.close()
+        os.system(borrado)
+        db_manager_menu(realtime,wallet_at_use,borrado)
+    if option == 'q' or option == 'Q':
+        db_manager_menu(realtime,wallet_at_use,borrado)
+    
+    else :
+        print('Introduce un valor correcto.')
+        find_a_buy(realtime,wallet_at_use,borrado)
+
+
 def db_manager_menu(realtime,wallet_at_use,borrado):
     option = input('¿Qué desea hacer con su Wallet?\n'
                    '[A]Añadir compra a la cartera.\n'
@@ -774,26 +835,19 @@ def db_manager_menu(realtime,wallet_at_use,borrado):
 
     if option == 'E' or option == 'e':
         modify_a_buy(realtime,wallet_at_use,borrado)
+
     if option == 'F' or option == 'f':
         modify_a_sell(realtime,wallet_at_use,borrado)
-        """#funcion para modificar venta de la cartera por error
-        1.Conexion a db de ventas
-        2.hacemos el update
-        3.hacemos commit
-        4.conexion a db de balances
-        5.como ya tenemos en las variables 
-        6.conectamos a db de balances
-        7.hacemos update
-        8.hacemos commit
-        9.cerramos conexion
+        
     if option == 'G' or option == 'g':
-        #funcion para buscar compra en la cartera
-        1.conectamos a db de compras
+        find_a_buy(realtime,wallet_at_use,borrado)
+        """1.conectamos a db de compras
         2.printeamos opciones
         3.seleccionamos la opcion
         4.consulta de busqueda segun la opcion con pandas df
         5.printeamos df
         6.cerramos conexion
+
     if option == 'H' or option == 'h':
         #funcion para buscar venta en la cartera
         1.conectamos a db de ventas

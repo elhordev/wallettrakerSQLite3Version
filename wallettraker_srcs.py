@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import time
 import requests
-from datetime import datetime
+import datetime
 import sqlite3
 from bs4 import BeautifulSoup
 import shutil
