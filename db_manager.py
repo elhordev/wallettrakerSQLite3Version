@@ -887,8 +887,23 @@ def show_wallet(wallet_at_use,borrado):
         input('\nPulsa ENTER para continuar.\n')
         os.system(borrado)
         time.sleep(2)
+        user_conn.close()
         show_wallet(wallet_at_use,borrado)
 
+    if option == 'B' or option == 'b':
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+        wallet_df = pd.read_sql(f'SELECT * FROM stock_wallet_{user_at_use}',user_conn)
+        user_conn.close()
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_sales_{user_at_use}.db')
+        wallet_df_sales = pd.read_sql(f'SELECT * FROM stock_sales_{user_at_use}',user_conn)
+        user_conn.close()
+        wallet_df_merged = pd.merge(wallet_df, wallet_df_sales, on='id_buy',how='inner',suffixes=(' Compra',' Venta'))
+        wallet_df_merged = wallet_df_merged.rename(columns=str.upper)
+        print(wallet_df_merged)
+        input('\nPulsa ENTER para continuar.\n')
+        os.system(borrado)
+        time.sleep(2)
+        show_wallet(wallet_at_use,borrado)
 
 def db_manager_menu(realtime,wallet_at_use,borrado):
     option = input('¿Qué desea hacer con su Wallet?\n'
