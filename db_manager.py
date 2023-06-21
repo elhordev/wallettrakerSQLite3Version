@@ -1,5 +1,5 @@
 from wallettraker_srcs import os, sqlite3, time, pd, datetime, shutil
-from main import main,borrado_dep_so as borrado, wallet_at_use
+from main import main,main_menu,borrado_dep_so as borrado, wallet_at_use
 
 
 
@@ -866,7 +866,7 @@ def find_a_sale(realtime,wallet_at_use,borrado):
         find_a_sale(realtime,wallet_at_use,borrado)
 
 
-def show_wallet(wallet_at_use,borrado):
+def show_wallet(realtime,wallet_at_use,borrado):
     
     user_conn = sqlite3.connect('./db/user.db')
     cursor = user_conn.cursor()
@@ -878,7 +878,8 @@ def show_wallet(wallet_at_use,borrado):
     
     option = input('[A]Muestra todas las compras\n'
                    '[B]Muestra tus compras ,junto a sus ventas.\n'
-                   '[C]Muestra las compras pendientes de venta.\n')
+                   '[C]Muestra las compras pendientes de venta.\n'
+                   '[D]Volver atras.\n')
     
     if option == 'A' or option == 'a':
         user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')  
@@ -888,7 +889,7 @@ def show_wallet(wallet_at_use,borrado):
         os.system(borrado)
         time.sleep(2)
         user_conn.close()
-        show_wallet(wallet_at_use,borrado)
+        show_wallet(realtime,wallet_at_use,borrado)
 
     if option == 'B' or option == 'b':
         user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
@@ -903,7 +904,67 @@ def show_wallet(wallet_at_use,borrado):
         input('\nPulsa ENTER para continuar.\n')
         os.system(borrado)
         time.sleep(2)
-        show_wallet(wallet_at_use,borrado)
+        show_wallet(realtime,wallet_at_use,borrado)
+
+    if option == 'C' or option == 'c':
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+        wallet_df = pd.read_sql(f'SELECT * FROM stock_wallet_{user_at_use}',user_conn)
+        user_conn.close()
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_sales_{user_at_use}.db')
+        wallet_df_sales = pd.read_sql(f'SELECT * FROM stock_sales_{user_at_use}',user_conn)
+        user_conn.close()
+        wallet_df_merged_notin = wallet_df[~wallet_df['id_buy'].isin(wallet_df_sales['id_buy'])]
+        wallet_df_merged_notin = wallet_df_merged_notin.rename(columns=str.upper)
+        print(wallet_df_merged_notin)
+        input('\nPulsa ENTER para continuar.\n')
+        os.system(borrado)
+        time.sleep(2)
+        show_wallet(realtime,wallet_at_use,borrado)       
+    if option == 'D' or option == 'd':
+        os.system(borrado)
+        time.sleep(2)
+        db_manager_menu(realtime,wallet_at_use,borrado)
+
+def show_sales(realtime,wallet_at_use,borrado):
+
+    user_conn = sqlite3.connect('./db/user.db')
+    cursor = user_conn.cursor()
+    cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+    user_at_use = cursor.fetchone()
+    user_at_use = user_at_use[1]
+    cursor.close()
+    user_conn.close()
+
+    option = input('[A]Muestra todas las ventas efectuadas.\n'
+                   '[B]Muestra todas las ventas junto a sus compras y el balance final.\n'
+                   '[C]Volver atras.\n')
+    
+    if option == 'A' or option == 'a':
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_sales_{user_at_use}.db')
+        wallet_df_sales = pd.read_sql(f'SELECT * FROM stock_sales_{user_at_use}',user_conn)
+        wallet_df_sales = wallet_df_sales.rename(columns=str.upper)
+        user_conn.close()
+        print(wallet_df_sales)
+        input('\nPulsa ENTER para continuar.\n')
+        os.system(borrado)
+        time.sleep(2)
+        show_sales(realtime,wallet_at_use,borrado)   
+    
+    if option == 'B' or option == 'b':
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/balances_{user_at_use}.db')
+        wallet_df_balances = pd.read_sql(f'SELECT * FROM balances_{user_at_use}',user_conn)
+        user_conn.close()
+        wallet_df_balances = wallet_df_balances.rename(columns=str.upper)
+        print(wallet_df_balances)
+        input('\nPulsa ENTER para continuar.\n')
+        os.system(borrado)
+        time.sleep(2)
+        show_sales(realtime,wallet_at_use,borrado) 
+    
+    if option == 'c' or option == 'C':
+        os.system(borrado)
+        time.sleep(2)
+        db_manager_menu(realtime,wallet_at_use,borrado)
 
 def db_manager_menu(realtime,wallet_at_use,borrado):
     option = input('¿Qué desea hacer con su Wallet?\n'
@@ -944,9 +1005,12 @@ def db_manager_menu(realtime,wallet_at_use,borrado):
         find_a_sale(realtime,wallet_at_use,borrado)
        
     if option == 'I' or option == 'i':
-        show_wallet(wallet_at_use,borrado)
-        """
+        show_wallet(realtime,wallet_at_use,borrado)
+     
     if option == 'J' or option =='j':
-        #funcion para ver ventas
+       show_sales(realtime,wallet_at_use,borrado)
+       
     if option == 'K' or option == 'k':
-        main.main_menu()"""
+        main_menu(realtime,wallet_at_use,borrado)
+        
+   

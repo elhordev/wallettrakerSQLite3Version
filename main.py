@@ -31,7 +31,7 @@ def main_menu(realtime,wallet_at_use,borrado_dep_so):
         db_manager.db_manager_menu(realtime,wallet_at_use,borrado_dep_so)
     
     if option == 'B' or option == 'b':
-        scraper.show_tiempo_real()
+        scraper.show_tiempo_real(realtime,borrado_dep_so)
     
     if option == 'C' or option == 'c':
         print('Aqui llamaremos a la nueva funcion de tiempo real con cartera')

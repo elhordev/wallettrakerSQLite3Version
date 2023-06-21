@@ -59,6 +59,8 @@ def show_tiempo_real(realtime,borrado):
         result = urlcontent(URL)          
         realtime = scrapurl(result)
         df = pd.DataFrame(realtime)
+        columns_to_modify = ['Price','Close','+/-']
+        df[columns_to_modify] = df[columns_to_modify].apply(lambda x: x.astype(str) + '€')
         print(df)
         time.sleep(5)
 
