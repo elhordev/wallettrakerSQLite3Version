@@ -8,4 +8,5 @@ import datetime
 import sqlite3
 from bs4 import BeautifulSoup
 import shutil
+import keyboard
 URL = "https://www.productoscotizados.com/mercado/ibex-35"

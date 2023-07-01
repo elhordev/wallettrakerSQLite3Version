@@ -1,4 +1,6 @@
-from wallettraker_srcs import requests, BeautifulSoup, os, URL, pd, time
+from wallettraker_srcs import requests, BeautifulSoup, os, URL, pd, time, sqlite3, keyboard
+import main
+
 def urlcontent(url):
     result = requests.get(url)
     return result
@@ -65,3 +67,56 @@ def show_tiempo_real(realtime,borrado):
         time.sleep(5)
 
 
+def show_tiempo_real_with_wallet(realtime,wallet_at_use,borrado):
+    while True:
+        
+        exit_key = ' '
+        realtime = []
+        os.system(borrado)
+        result = urlcontent(URL)          
+        realtime = scrapurl(result)
+        df = pd.DataFrame(realtime)
+
+
+        user_conn = sqlite3.connect('./db/user.db')
+        cursor = user_conn.cursor()
+        cursor.execute(f'SELECT * FROM user WHERE id={wallet_at_use}')
+        user_at_use = cursor.fetchone()
+        user_at_use = user_at_use[1]
+        cursor.close()
+        user_conn.close()
+
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')
+        wallet_df = pd.read_sql(f'SELECT * FROM stock_wallet_{user_at_use}',user_conn)
+        user_conn.close()
+        user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_sales_{user_at_use}.db')
+        wallet_df_sales = pd.read_sql(f'SELECT * FROM stock_sales_{user_at_use}',user_conn)
+        user_conn.close()
+        wallet_df_merged_notin = wallet_df[~wallet_df['id_buy'].isin(wallet_df_sales['id_buy'])]
+        wallet_df_merged_notin = wallet_df_merged_notin.rename(columns=str.capitalize)
+        
+        wallet_df_merged_notin_result = pd.merge(df, wallet_df_merged_notin, on='Stock')
+       
+
+        wallet_df_merged_notin_result['Balance'] = (
+            wallet_df_merged_notin_result['Price'] * wallet_df_merged_notin_result['Qty']
+            ) - wallet_df_merged_notin_result['Accountcharge']
+        
+
+
+        columns_to_modify = ['Price','Close','+/-']
+        df[columns_to_modify] = df[columns_to_modify].apply(lambda x: x.astype(str) + '€')
+        columns_to_modify2 = ['Price','Close','+/-','Buy_price','Accountcharge','Balance']
+        wallet_df_merged_notin_result[columns_to_modify2] = wallet_df_merged_notin_result[columns_to_modify2].apply(lambda x: x.astype(str) + '€' )
+        
+        print('\nIBEX 35\n' + '-' * 7)
+        print(df)
+        print('\nVALORES EN CARTERA\n' + '-' * 18)
+        print(wallet_df_merged_notin_result)
+        
+        if keyboard.is_pressed(exit_key):
+            break
+        
+        time.sleep(5)
+
+    main.main_menu(realtime,wallet_at_use,borrado)    

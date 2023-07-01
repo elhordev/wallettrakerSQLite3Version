@@ -34,7 +34,7 @@ def main_menu(realtime,wallet_at_use,borrado_dep_so):
         scraper.show_tiempo_real(realtime,borrado_dep_so)
     
     if option == 'C' or option == 'c':
-        print('Aqui llamaremos a la nueva funcion de tiempo real con cartera')
+        scraper.show_tiempo_real_with_wallet(realtime,wallet_at_use,borrado_dep_so)
     
     if option == 'D' or option == 'd':
         user_menu()
