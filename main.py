@@ -1,4 +1,4 @@
-from wallettraker_srcs import HEADER ,os ,time ,URL 
+from wallettraker_srcs import HEADER ,os ,time ,URL,color_column 
 import db_manager
 import scraper
 wallet_at_use = None
@@ -29,16 +29,16 @@ def main_menu(realtime,wallet_at_use,borrado_dep_so):
                    '[F]Salir.\n') 
     if option == 'A' or option == 'a':
         db_manager.db_manager_menu(realtime,wallet_at_use,borrado_dep_so)
-    
+        os.system(borrado_dep_so)
     if option == 'B' or option == 'b':
         scraper.show_tiempo_real(realtime,borrado_dep_so)
-    
+        os.system(borrado_dep_so)
     if option == 'C' or option == 'c':
-        scraper.show_tiempo_real_with_wallet(realtime,wallet_at_use,borrado_dep_so)
-    
+        scraper.show_tiempo_real_with_wallet(realtime,wallet_at_use,borrado_dep_so,color_column)
+        os.system(borrado_dep_so)
     if option == 'D' or option == 'd':
         user_menu()
-
+        os.system(borrado_dep_so)
     if option == 'F' or option == 'f':
         exit()
 

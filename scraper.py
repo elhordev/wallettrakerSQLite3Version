@@ -1,4 +1,4 @@
-from wallettraker_srcs import requests, BeautifulSoup, os, URL, pd, time, sqlite3, keyboard
+from wallettraker_srcs import requests, BeautifulSoup, os, URL, pd, time, sqlite3, keyboard, color_column, Fore, Style
 import main
 
 def urlcontent(url):
@@ -44,7 +44,7 @@ def scrapurl(result):
             close_acciones.append(close)
     for more_or_less in more_or_less_scrap:
         if "\n+/-" not in more_or_less.text:
-            more_or_less = more_or_less.text.replace("\n","")
+            more_or_less = more_or_less.text.replace("\n","").replace(',','.')
             more_or_less_acciones.append(more_or_less)
     for Stock, Price, Time, Var, Close, VarinPercent in zip(acciones, precio_acciones, tiempo_acciones, var_acciones, 
                                                             close_acciones, more_or_less_acciones):
@@ -67,10 +67,13 @@ def show_tiempo_real(realtime,borrado):
         time.sleep(5)
 
 
-def show_tiempo_real_with_wallet(realtime,wallet_at_use,borrado):
-    while True:
+def show_tiempo_real_with_wallet(realtime,wallet_at_use,borrado,colors):
+    
+    exit_key = 'q'
+
+    while not keyboard.is_pressed(exit_key):
         
-        exit_key = ' '
+        
         realtime = []
         os.system(borrado)
         result = urlcontent(URL)          
@@ -105,18 +108,40 @@ def show_tiempo_real_with_wallet(realtime,wallet_at_use,borrado):
 
 
         columns_to_modify = ['Price','Close','+/-']
-        df[columns_to_modify] = df[columns_to_modify].apply(lambda x: x.astype(str) + '€')
         columns_to_modify2 = ['Price','Close','+/-','Buy_price','Accountcharge','Balance']
+      
+        wallet_df_merged_notin_result = wallet_df_merged_notin_result.drop(['Index','Id_buy'],axis=1)
+        wallet_df_merged_notin_result['Accountcharge'] = wallet_df_merged_notin_result['Accountcharge'].apply(lambda x: round(x,2))
+        wallet_df_merged_notin_result['Balance'] = wallet_df_merged_notin_result['Balance'].apply(lambda x: round(x,2))
+        
+        colors_for_df = ['+/-']
+        colors_for_wallet_df = ['+/-','Balance']
+        
+        df['+/-'] = df["+/-"].astype(float)
+        wallet_df_merged_notin_result['+/-'] = wallet_df_merged_notin_result["+/-"].astype(float)
+
+        '''for col in colors_for_df:
+            df[col] = df[col].apply(colors)
+            
+        for col in colors_for_wallet_df:   
+            wallet_df_merged_notin_result[col] = wallet_df_merged_notin_result[col].apply(colors)
+        
+        df[columns_to_modify] = df[columns_to_modify].apply(lambda x: x.astype(str) + '€')
         wallet_df_merged_notin_result[columns_to_modify2] = wallet_df_merged_notin_result[columns_to_modify2].apply(lambda x: x.astype(str) + '€' )
         
-        print('\nIBEX 35\n' + '-' * 7)
+        pd.set_option('display.width', None)
+        pd.set_option('display.expand_frame_repr', False)
+        '''
+        print(Fore.CYAN + '\nIBEX 35\n' + '-' * 7)
+        print(Style.RESET_ALL)
         print(df)
-        print('\nVALORES EN CARTERA\n' + '-' * 18)
+        
+        print(Fore.GREEN + '\nVALORES EN CARTERA\n' + '-' * 18)
+        print(Style.RESET_ALL)
         print(wallet_df_merged_notin_result)
         
-        if keyboard.is_pressed(exit_key):
-            break
         
-        time.sleep(5)
+        
+        time.sleep(10)
 
     main.main_menu(realtime,wallet_at_use,borrado)    

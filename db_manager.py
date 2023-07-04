@@ -124,6 +124,7 @@ def choose_user():
         shutil.rmtree(f'./db/user/{user_to_delete}')
         print(f'Usuario {user_to_delete} eliminado, a chuparla!')
         time.sleep(2)
+        os.system(borrado)
         choose_user()
     if user_id == 'Q' or user_id == 'q':
         exit()
@@ -168,7 +169,8 @@ def add_to_wallet(realtime,wallet_at_use,borrado):
         user_conn.close()
         os.system(borrado)
         print(f"Añadida la compra de {Qty} acciones de {Stock} por un cargo en cuenta de {AccountCharge} euros.")
-        
+        time.sleep(3)
+        db_manager_menu(realtime,wallet_at_use,borrado)
     except ValueError:
             os.system(borrado)
             print("Valor introducido incorrecto, solo valor numerico.")
@@ -762,10 +764,10 @@ def find_a_buy(realtime,wallet_at_use,borrado):
                    '[A]Nombre valor\n'
                    '[B]Fecha de compra\n'
                    '[C]Cantidad\n'
-                   '[D]Volver atrás'
+                   '[D]Volver atrás\n'
                    )
     user_conn = sqlite3.connect(f'./db/user/{user_at_use}/stock_wallet_{user_at_use}.db')  
-   
+    os.system(borrado)
     
     if option == 'a' or option == 'A':
         name_of_buy = input('Cual es el nombre del valor?\n')
@@ -981,36 +983,45 @@ def db_manager_menu(realtime,wallet_at_use,borrado):
                    '[K]Volver atrás.\n')
     
     if option == 'A' or option == 'a':
+        os.system(borrado)
         add_to_wallet(realtime,wallet_at_use,borrado)
     
     if option == 'B' or option == 'b':
+        os.system(borrado)
         add_a_sell(realtime,wallet_at_use,borrado)
 
     if option == 'C' or option == 'c':
+        os.system(borrado)
         delete_a_buy(realtime,wallet_at_use,borrado)
 
     if option == 'D' or option == 'd':
+        os.system(borrado)
         delete_a_sell(realtime,wallet_at_use,borrado)
 
     if option == 'E' or option == 'e':
+        os.system(borrado)
         modify_a_buy(realtime,wallet_at_use,borrado)
 
     if option == 'F' or option == 'f':
+        os.system(borrado)
         modify_a_sell(realtime,wallet_at_use,borrado)
         
     if option == 'G' or option == 'g':
+        os.system(borrado)
         find_a_buy(realtime,wallet_at_use,borrado)
         
     if option == 'H' or option == 'h':
+        os.system(borrado)
         find_a_sale(realtime,wallet_at_use,borrado)
        
     if option == 'I' or option == 'i':
+        os.system(borrado)
         show_wallet(realtime,wallet_at_use,borrado)
      
     if option == 'J' or option =='j':
+       os.system(borrado)
        show_sales(realtime,wallet_at_use,borrado)
        
     if option == 'K' or option == 'k':
-        main_menu(realtime,wallet_at_use,borrado)
-        
-   
+       os.system(borrado)
+       main_menu(realtime,wallet_at_use,borrado)
